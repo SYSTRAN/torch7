@@ -1015,6 +1015,15 @@ void THTensor_(addbmm)(THTensor *result, real beta, THTensor *t, real alpha, THT
 
 void THTensor_(baddbmm)(THTensor *result, real beta, THTensor *t, real alpha, THTensor *batch1, THTensor *batch2)
 {
+  long batch1_stride[3];
+  long batch1_size[3];
+  long batch1_storageOffset;
+  long batch2_stride[3];
+  long batch2_size[3];
+  long batch2_storageOffset;
+  long result_stride[3];
+  long result_size[3];
+  long result_storageOffset;
   long batch;
 
   THArgCheck(THTensor_(nDimension)(batch1) == 3, 1, "expected 3D tensor, got %dD", THTensor_(nDimension)(batch1));
@@ -1039,21 +1048,42 @@ void THTensor_(baddbmm)(THTensor *result, real beta, THTensor *t, real alpha, TH
     THTensor_(copy)(result, t);
   }
 
-  THTensor *matrix1 = THTensor_(new)();
-  THTensor *matrix2 = THTensor_(new)();
-  THTensor *result_matrix = THTensor_(new)();
+  for(int i = 0; i < 3; i++) {
+    batch1_stride[i] = batch1->stride[i];
+    batch1_size[i] = batch1->size[i];
+    batch2_stride[i] = batch2->stride[i];
+    batch2_size[i] = batch2->size[i];
+    result_stride[i] = result->stride[i];
+    result_size[i] = result->size[i];
+  }
+  batch1_storageOffset = batch1->storageOffset;
+  batch2_storageOffset = batch2->storageOffset;
+  result_storageOffset = result->storageOffset;
 
   for (batch = 0; batch < THTensor_(size)(batch1, 0); ++batch) {
-    THTensor_(select)(matrix1, batch1, 0, batch);
-    THTensor_(select)(matrix2, batch2, 0, batch);
-    THTensor_(select)(result_matrix, result, 0, batch);
+    THTensor_(select)(batch1, 0, 0, batch);
+    THTensor_(select)(batch2, 0, 0, batch);
+    THTensor_(select)(result, 0, 0, batch);
 
-    THTensor_(addmm)(result_matrix, beta, result_matrix, alpha, matrix1, matrix2);
+    THTensor_(addmm)(result, beta, result, alpha, batch1, batch2);
+
+    /* restore the original size, stride, and dimension */
+    for(int i = 0; i < 3; i++) {
+      batch1->stride[i] = batch1_stride[i];
+      batch1->size[i] = batch1_size[i];
+      batch2->stride[i] = batch2_stride[i];
+      batch2->size[i] = batch2_size[i];
+      result->stride[i] = result_stride[i];
+      result->size[i] = result_size[i];
+    }
+    batch1->storageOffset = batch1_storageOffset;
+    batch2->storageOffset = batch2_storageOffset;
+    result->storageOffset = result_storageOffset;
+    batch1->nDimension = 3;
+    batch2->nDimension = 3;
+    result->nDimension = 3;
   }
 
-  THTensor_(free)(matrix1);
-  THTensor_(free)(matrix2);
-  THTensor_(free)(result_matrix);
 }
 
 ptrdiff_t THTensor_(numel)(THTensor *t)
