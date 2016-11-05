@@ -1025,6 +1025,7 @@ void THTensor_(baddbmm)(THTensor *result, real beta, THTensor *t, real alpha, TH
   long result_size[3];
   long result_storageOffset;
   long batch;
+  long i;
 
   THArgCheck(THTensor_(nDimension)(batch1) == 3, 1, "expected 3D tensor, got %dD", THTensor_(nDimension)(batch1));
   THArgCheck(THTensor_(nDimension)(batch2) == 3, 2, "expected 3D tensor, got %dD", THTensor_(nDimension)(batch2));
@@ -1048,7 +1049,7 @@ void THTensor_(baddbmm)(THTensor *result, real beta, THTensor *t, real alpha, TH
     THTensor_(copy)(result, t);
   }
 
-  for(int i = 0; i < 3; i++) {
+  for(i = 0; i < 3; i++) {
     batch1_stride[i] = batch1->stride[i];
     batch1_size[i] = batch1->size[i];
     batch2_stride[i] = batch2->stride[i];
