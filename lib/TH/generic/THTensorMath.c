@@ -1069,7 +1069,7 @@ void THTensor_(baddbmm)(THTensor *result, real beta, THTensor *t, real alpha, TH
     THTensor_(addmm)(result, beta, result, alpha, batch1, batch2);
 
     /* restore the original size, stride, and dimension */
-    for(int i = 0; i < 3; i++) {
+    for(i = 0; i < 3; i++) {
       batch1->stride[i] = batch1_stride[i];
       batch1->size[i] = batch1_size[i];
       batch2->stride[i] = batch2_stride[i];
